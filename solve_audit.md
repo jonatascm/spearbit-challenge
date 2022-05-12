@@ -7,9 +7,20 @@ Context:
 1. [`Implementation.sol#L11-L15`](https://github.com/spearbit-audits/writing-exercise/blob/de45a4c5b654710812e9fa29dde6e12526fe4786/contracts/Implementation.sol#L11-L15)
 2. [`Implementation.sol#L17-L21`](https://github.com/brinktrade/brink-core/blob/db0027533b228a6994acdbcb06713b5a3a3ecb38/contracts/Batched/DeployAndCall.sol#L17-L21)
 
-The implementation contract is the address of implementation in proxy contract, we can't change the value of implementation after deployed. The attacker can execute selfdestruct by delegating call in behalf of implementation contract.
+The implementation contract is only deployed once and used in all proxy contracts as a fixed address that can't change after deployment. The exploit focus on `selfdestruct` the implementation contract disabling all proxy contracts.
 
-1. Creating a contract using this functions anyone can selfdestruct the implementation contract by calling attack()
+There are few steps to reproduce the attack in implementation contract:
+
+1. The attacker calls `callContract` in implementation contract
+2. The `callContract` function calls the implementation contract again, using the `delegatecallContract` function
+3. The `delegatecallContract` function delegatecall the selfdestruct function in malicious contract, here the context is implementation contract.
+4. When malicious contract executes `selfdestruct` function it will destroy the implementation contract because the context is the implementation contract
+
+The next image shows how this vulnerability works.
+
+![`How vulnerability works`](./screenshots/how-it-works.png)
+
+Here is an example of attacker contract that can selfdestruct the implementation contract by calling attack()
 
 ```solidity
 /*
@@ -34,11 +45,8 @@ function destruct() external {
 
 ```
 
-This vulnerability consists in use the implemntation contract calling himself using the callContract function and then delegatecallContract to malicious contract selfdestructing in context of implementation contract.
-
-![`How it works`](./screenshots/how-it-works.png)
-
 **Recommendation**
+
 To avoid this vulnerability, you can change the Implementation contract to `library` and remove the `payable` from functions:
 
 ```solidity
