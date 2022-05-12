@@ -38,23 +38,31 @@ This vulnerability consists in use the implemntation contract calling himself us
 
 ![`How it works`](./screenshots/how-it-works.png)
 
-**Recommendation**:
-To avoid this vulnerability, you should implement a reentrancy guard for implementation contract.
+**Recommendation**
+To avoid this vulnerability, you can change the Implementation contract to `library` and remove the `payable` from functions:
 
-Add inheritance from ReentrancyGuard:
+```solidity
+library Implementation {
+  function callContract(address a, bytes calldata _calldata)
+    external
+    returns (bytes memory)
+  {
+    (bool success, bytes memory ret) = a.call{ value: msg.value }(_calldata);
+    require(success);
+    return ret;
+  }
+
+  function delegatecallContract(address a, bytes calldata _calldata)
+    external
+    returns (bytes memory)
+  {
+    (bool success, bytes memory ret) = a.delegatecall(_calldata);
+    require(success);
+    return ret;
+  }
+}
 
 ```
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-contract Implementation is ReentrancyGuard { ... }
-```
-
-Add noReentrant for delegatecallContract:
-
-```
-function delegatecallContract(address a, bytes calldata _calldata) payable external nonReentrant returns (bytes memory) {
-```
-
-That makes it impossible to delegate call in behalf of itself to another contract
 
 ## Informational linter issues
 
