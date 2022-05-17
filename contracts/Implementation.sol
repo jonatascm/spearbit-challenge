@@ -3,10 +3,17 @@
 // DO NOT USE THIS IN PRODUCTION.
 pragma solidity 0.8.10;
 
+import "hardhat/console.sol";
+
 /// The implementation contract for the Proxy (see: `Proxy.sol`).
 ///
 /// Only deployed once and the implementation is reused by all proxy contracts.
 contract Implementation {
+    address private immutable originalAddress;
+
+    constructor() {
+        originalAddress = address(this);
+    }
 
     function callContract(address a, bytes calldata _calldata) payable external returns (bytes memory) {
         (bool success , bytes memory ret) =  a.call{value: msg.value}(_calldata);
@@ -15,6 +22,7 @@ contract Implementation {
     }
 
     function delegatecallContract(address a, bytes calldata _calldata) payable external returns (bytes memory) {
+        require(address(this) != originalAddress, "Should call with delegatecall");
         (bool success, bytes memory ret) =  a.delegatecall(_calldata);
         require(success);
         return ret;
