@@ -49,7 +49,7 @@ describe("Malicious Contract", () => {
     expect(implCode).to.not.equal("0x");
   });
 
-  it("should 1", async () => {
+  it("should call malicious contract to call directly implementation contract", async () => {
     try {
       await malicious.attackProxy(proxy.address);
     } catch (e) {
@@ -60,7 +60,7 @@ describe("Malicious Contract", () => {
     expect(implCode).to.not.equal("0x");
   });
 
-  it("should 2", async () => {
+  it("should call malicous contract to call proxy contract and then implementation", async () => {
     try {
       await malicious.attack2(implementation.address);
     } catch (e) {
